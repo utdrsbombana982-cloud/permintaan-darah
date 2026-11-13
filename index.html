@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Permintaan Darah - UPDRS Bombana</title>
+<style>
+:root{--red:#991b1b;--red2:#7f1d1d;--bg:#f3f6fa;--line:#e5e7eb;--muted:#64748b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px Arial,sans-serif;color:#1f2937}
+header{background:linear-gradient(120deg,var(--red2),#dc2626);color:white;padding:22px max(18px,calc((100% - 1150px)/2))}
+header h1{margin:0 0 5px;font-size:25px}header p{margin:0;opacity:.9}
+main{max-width:1150px;margin:22px auto;padding:0 16px}.card{background:white;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:0 3px 12px #00000008}
+h2{font-size:18px;color:var(--red2);margin:0 0 15px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+label{display:block;font-weight:bold;font-size:13px;margin:0 0 6px}input,select,textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font:inherit}textarea{min-height:70px}
+button{border:0;border-radius:8px;padding:10px 14px;font-weight:bold;cursor:pointer}.primary{background:#b91c1c;color:white}.dark{background:#334155;color:white}.green{background:#15803d;color:white}.light{background:#e2e8f0;color:#1e293b}.danger{background:#991b1b;color:white}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.hidden{display:none!important}.muted{color:var(--muted);font-size:12px}.topline{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{border:1px solid var(--line);padding:13px;border-radius:10px}.stat small{display:block;color:var(--muted);margin-bottom:7px}.stat b{font-size:23px;color:var(--red2)}
+.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:13px}th{background:#fff1f2;color:var(--red2)}
+.pill{display:inline-block;border-radius:30px;padding:5px 8px;background:#fef3c7;color:#92400e;font-weight:bold;font-size:12px}.p-Diproses{background:#dbeafe;color:#1d4ed8}.p-Siap{background:#dcfce7;color:#166534}.p-Selesai{background:#e2e8f0;color:#334155}.p-Dibatalkan{background:#fee2e2;color:#991b1b}
+.notice{padding:12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:9px;margin-bottom:12px}.notice.alert{background:#ecfdf5;border-color:#86efac}
+#login{max-width:430px;margin:45px auto}#login .card{padding:25px}.error{color:#b91c1c;font-weight:bold;margin-top:10px}
+@media(max-width:760px){.grid,.grid3,.stats{grid-template-columns:1fr}main{margin:12px auto}header h1{font-size:21px}}
+@media print{.noprint,header p{display:none!important}body{background:white}.card{box-shadow:none}}
+</style></head><body>
+<header><h1>Permintaan & Distribusi Darah</h1><p>Unit Pelayanan Darah — RSUD Bombana</p></header>
+<section id="login"><div class="card"><h2>Login Petugas</h2><form id="loginForm">
+<label>Username</label><input id="username" autocomplete="username" required placeholder="Username petugas">
+<label style="margin-top:12px">Password</label><input id="password" type="password" autocomplete="current-password" required placeholder="Password">
+<div class="actions"><button class="primary" type="submit">Masuk</button></div><div id="loginError" class="error"></div>
+<p class="muted">Gunakan akun ruangan masing-masing atau akun UPDRS.</p></form></div></section>
+<main id="app" class="hidden">
+<div class="card noprint"><div class="topline"><div><b id="who"></b><div class="muted" id="roleInfo"></div></div><div class="actions" style="margin:0"><button class="light" onclick="loadData()">↻ Perbarui</button><button class="dark" onclick="logout()">Keluar</button></div></div></div>
+<div id="wardView" class="hidden">
+<div class="card"><h2>Form Permintaan Darah</h2><form id="requestForm">
+<div class="grid"><div><label>Nama Pasien *</label><input id="patient" required></div><div><label>No. RM</label><input id="mrn"></div>
+<div><label>Dokter Penanggung Jawab</label><input id="doctor"></div><div><label>Nama Pemohon *</label><input id="requester" required></div></div>
+<div class="grid3" style="margin-top:12px"><div><label>Golongan Darah *</label><select id="blood" required><option value="">Pilih</option><option>A</option><option>B</option><option>AB</option><option>O</option></select></div>
+<div><label>Rhesus</label><select id="rhesus"><option>+</option><option>-</option></select></div>
+<div><label>Komponen *</label><select id="component"><option>Whole Blood (WB)</option><option>PRC</option><option>TC</option><option>FFP</option><option>Cryoprecipitate</option></select></div>
+<div><label>Jumlah Kantong *</label><input id="units" type="number" min="1" value="1" required></div><div><label>Tanggal/Jam Dibutuhkan</label><input id="needed" type="datetime-local"></div>
+<div><label>Prioritas</label><select id="priority"><option>Normal</option><option>Segera</option><option>Urgent</option><option>Emergency</option></select></div></div>
+<div style="margin-top:12px"><label>Indikasi / Keterangan</label><textarea id="notes"></textarea></div>
+<div class="actions"><button class="primary">Kirim Permintaan ke UPDRS</button><button type="reset" class="light">Reset</button></div>
+</form></div>
+</div>
+<div id="updrsView" class="hidden">
+<div class="notice"><b>Panel penerimaan UPDRS:</b> permintaan dari seluruh ruangan akan muncul di bawah. Periksa kecocokan identitas pasien, golongan darah, komponen, dan jumlah sebelum mengubah status.</div>
+<div class="stats"><div class="stat"><small>Total Permintaan</small><b id="sTotal">0</b></div><div class="stat"><small>Menunggu</small><b id="sWait">0</b></div><div class="stat"><small>Diproses</small><b id="sProcess">0</b></div><div class="stat"><small>Siap Distribusi</small><b id="sReady">0</b></div></div>
+</div>
+<div class="card"><div class="topline"><h2 id="listTitle">Daftar Permintaan</h2><div class="actions noprint" style="margin:0"><input id="search" placeholder="Cari pasien / ruangan..." style="width:220px"><button class="light" onclick="window.print()">Cetak</button></div></div>
+<div id="wardNotice" class="notice alert hidden">Pemberitahuan: ada perubahan status permintaan. Hubungi UPDRS jika darah berstatus Siap Distribusi.</div>
+<div class="tablewrap"><table><thead><tr><th>No. Permintaan</th><th>Tanggal</th><th>Pasien / No. RM</th><th>Ruangan</th><th>Gol. / Komponen</th><th>Jumlah</th><th>Status</th><th>Catatan UPDRS</th><th class="noprint" id="actionHead">Aksi</th></tr></thead><tbody id="rows"></tbody></table></div>
+<p class="muted">Data tersimpan terpusat pada database online dan diperbarui otomatis setiap 5 detik selama perangkat terhubung ke internet.</p></div>
+</main>
+<script>
+let token='', currentUser=null, requests=[], lastSnapshot='', notified=new Set();
+const $=id=>document.getElementById(id);
+async function api(url,method='GET',data){
+ const r=await fetch(url,{method,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:data?JSON.stringify(data):undefined});
+ const j=await r.json(); if(!r.ok) throw new Error(j.error||'Permintaan gagal'); return j;
+}
+$('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginError').textContent='';
+ try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('username').value,password:$('password').value})});const j=await r.json();if(!r.ok)throw new Error(j.error);token=j.token;currentUser=j.user;sessionStorage.setItem('updrsToken',token);startApp();}
+ catch(err){$('loginError').textContent=err.message;}
+});
+async function startApp(){
+ $('login').classList.add('hidden');$('app').classList.remove('hidden');
+ $('who').textContent=currentUser.username+' — '+currentUser.room;
+ const isUp=currentUser.role==='updrs';$('roleInfo').textContent=isUp?'Hak akses: UPDRS (penerimaan dan pemrosesan permintaan)':'Hak akses: Ruangan Perawatan (mengirim dan memantau permintaan)';
+ $('wardView').classList.toggle('hidden',isUp);$('updrsView').classList.toggle('hidden',!isUp);
+ $('listTitle').textContent=isUp?'Permintaan Masuk dari Semua Ruangan':'Riwayat Permintaan Ruangan '+currentUser.room;
+ $('actionHead').textContent=isUp?'Tindakan UPDRS':'';
+ await loadData(); if(window.refreshTimer)clearInterval(window.refreshTimer);window.refreshTimer=setInterval(loadData,5000);
+}
+async function loadData(){
+ if(!token)return;try{const j=await api('/api/requests');const old=lastSnapshot;requests=j.requests;const snap=requests.map(x=>x.id+':'+x.status+':'+x.updated).join('|');
+ if(old && old!==snap && currentUser.role==='ruangan'){
+   const changed=requests.filter(x=>!old.includes(x.id+':'+x.status+':'+x.updated));
+   if(changed.some(x=>x.status==='Siap Distribusi')){ $('wardNotice').classList.remove('hidden'); if('Notification'in window && Notification.permission==='granted')new Notification('Darah siap didistribusikan',{body:'Periksa daftar permintaan '+currentUser.room});}
+ }
+ lastSnapshot=snap;render();
+ }catch(e){if(e.message.includes('login'))logout();console.error(e);}
+}
+function render(){
+ const q=$('search').value.toLowerCase();const isUp=currentUser.role==='updrs';
+ const rows=requests.filter(x=>[x.patient,x.mrn,x.room,x.requestNo,x.blood,x.component].join(' ').toLowerCase().includes(q));
+ $('rows').innerHTML=rows.length?rows.map(x=>`<tr><td><b>${esc(x.requestNo)}</b></td><td>${new Date(x.created).toLocaleString('id-ID')}</td><td><b>${esc(x.patient)}</b><br>${esc(x.mrn)}</td><td>${esc(x.room)}</td><td>${esc(x.blood)}${esc(x.rhesus)}<br>${esc(x.component)}</td><td>${esc(x.units)} kantong</td><td><span class="pill ${statusClass(x.status)}">${esc(x.status)}</span></td><td>${esc(x.statusNote||'-')}</td><td class="noprint">${isUp?`<button class="light" onclick="updateStatus('${x.id}')">Ubah Status</button>`:''}</td></tr>`).join(''):`<tr><td colspan="9" style="text-align:center;padding:25px;color:#64748b">Belum ada permintaan.</td></tr>`;
+ if(isUp){$('sTotal').textContent=requests.length;$('sWait').textContent=requests.filter(x=>x.status==='Menunggu').length;$('sProcess').textContent=requests.filter(x=>x.status==='Diproses').length;$('sReady').textContent=requests.filter(x=>x.status==='Siap Distribusi').length;}
+}
+function statusClass(s){return s==='Diproses'?'p-Diproses':s==='Siap Distribusi'?'p-Siap':s==='Selesai'?'p-Selesai':s==='Dibatalkan'?'p-Dibatalkan':''}
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+$('requestForm').addEventListener('submit',async e=>{e.preventDefault();try{
+ await api('/api/requests','POST',{patient:$('patient').value,mrn:$('mrn').value,doctor:$('doctor').value,requester:$('requester').value,blood:$('blood').value,rhesus:$('rhesus').value,component:$('component').value,units:$('units').value,needed:$('needed').value,priority:$('priority').value,notes:$('notes').value});
+ e.target.reset();$('units').value=1;await loadData();alert('Permintaan berhasil dikirim dan sudah masuk ke panel UPDRS.');
+ }catch(err){alert(err.message);}
+});
+async function updateStatus(id){
+ const x=requests.find(v=>v.id===id);if(!x)return;
+ const status=prompt('Pilih status dengan mengetik salah satu:\\nMenunggu\\nDiproses\\nSiap Distribusi\\nSelesai\\nDibatalkan',x.status);
+ if(status===null)return;const allowed=['Menunggu','Diproses','Siap Distribusi','Selesai','Dibatalkan'];if(!allowed.includes(status)){alert('Status tidak dikenal.');return;}
+ let note=prompt('Catatan untuk ruangan pemohon (contoh: darah tersedia, silakan koordinasi pengambilan):',status==='Siap Distribusi'?'Darah tersedia. Silakan koordinasi pengambilan dengan UPDRS.':x.statusNote||'');
+ try{await api('/api/requests/'+id,'PUT',{status,statusNote:note||''});await loadData();alert('Status permintaan berhasil diperbarui.');}
+ catch(err){alert(err.message);}
+}
+async function logout(){try{await api('/api/logout','POST')}catch{}token='';currentUser=null;if(window.refreshTimer)clearInterval(window.refreshTimer);sessionStorage.removeItem('updrsToken');$('app').classList.add('hidden');$('login').classList.remove('hidden');$('password').value='';}
+$('search').addEventListener('input',render);
+if('Notification'in window && Notification.permission==='default'){/* izin dapat diaktifkan melalui pengaturan browser */}
+</script></body></html>
